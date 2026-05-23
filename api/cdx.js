@@ -1,9 +1,4 @@
-// Vercel serverless function — proxies requests to the Wayback Machine CDX API
-// This runs on Vercel's servers, bypassing any client-side restrictions
-// Deploy at: futurexrp-wayback-explorer.vercel.app/api/cdx
-
-export default async function handler(req, res) {
-  // Allow requests from anywhere (our GitHub Pages site + Claude fetching)
+module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -12,7 +7,6 @@ export default async function handler(req, res) {
     return res.status(200).end();
   }
 
-  // Build the CDX API URL from query params passed through
   const {
     url,
     matchType = 'prefix',
@@ -60,4 +54,4 @@ export default async function handler(req, res) {
       cdxUrl
     });
   }
-}
+};
