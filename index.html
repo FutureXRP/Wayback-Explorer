@@ -1,0 +1,1137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wayback Explorer — Archive Research Tool</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Playfair+Display:wght@400;700&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1a1612;
+    --paper: #f5f0e8;
+    --cream: #ede8dc;
+    --gold: #8a6820;
+    --gold-light: #c9a84c;
+    --rust: #8b3a2a;
+    --rust-light: #c0503a;
+    --muted: #6b6459;
+    --border: #c8bfad;
+    --mono: 'IBM Plex Mono', monospace;
+    --serif: 'Playfair Display', serif;
+    --sans: 'IBM Plex Sans', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--sans);
+    min-height: 100vh;
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  /* HEADER */
+  header {
+    border-bottom: 2px solid var(--ink);
+    padding: 2rem 2.5rem 1.5rem;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 2rem;
+  }
+
+  .logo-block h1 {
+    font-family: var(--serif);
+    font-size: 2rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1;
+  }
+
+  .logo-block .tagline {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    color: var(--muted);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-top: 0.35rem;
+  }
+
+  .header-meta {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    color: var(--muted);
+    text-align: right;
+    line-height: 1.8;
+  }
+
+  /* PRESET TARGETS */
+  .presets {
+    padding: 1rem 2.5rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    background: var(--cream);
+  }
+
+  .presets-label {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    margin-right: 0.25rem;
+  }
+
+  .preset-btn {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    padding: 0.25rem 0.7rem;
+    border: 1px solid var(--border);
+    background: var(--paper);
+    color: var(--ink);
+    cursor: pointer;
+    border-radius: 2px;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+
+  .preset-btn:hover {
+    background: var(--ink);
+    color: var(--paper);
+    border-color: var(--ink);
+  }
+
+  /* SEARCH BAR */
+  .search-section {
+    padding: 2rem 2.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .search-row {
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-end;
+    flex-wrap: wrap;
+  }
+
+  .field-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+
+  .field-group label {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+  }
+
+  .field-group input, .field-group select {
+    font-family: var(--mono);
+    font-size: 0.82rem;
+    padding: 0.55rem 0.75rem;
+    border: 1.5px solid var(--border);
+    background: white;
+    color: var(--ink);
+    border-radius: 2px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  .field-group input:focus, .field-group select:focus {
+    border-color: var(--ink);
+  }
+
+  .field-url input { width: 360px; }
+  .field-from input, .field-to input { width: 120px; }
+  .field-limit select { width: 100px; }
+  .field-match select { width: 140px; }
+
+  .search-btn {
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    font-weight: 500;
+    padding: 0.55rem 1.5rem;
+    background: var(--ink);
+    color: var(--paper);
+    border: none;
+    cursor: pointer;
+    border-radius: 2px;
+    letter-spacing: 0.05em;
+    transition: background 0.15s;
+    white-space: nowrap;
+  }
+
+  .search-btn:hover { background: var(--rust); }
+  .search-btn:disabled { background: var(--muted); cursor: not-allowed; }
+
+  .clear-btn {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    padding: 0.55rem 0.9rem;
+    background: transparent;
+    color: var(--muted);
+    border: 1.5px solid var(--border);
+    cursor: pointer;
+    border-radius: 2px;
+    transition: all 0.15s;
+  }
+
+  .clear-btn:hover { color: var(--rust); border-color: var(--rust); }
+
+  /* FILTER BAR */
+  .filter-bar {
+    padding: 0.85rem 2.5rem;
+    border-bottom: 1px solid var(--border);
+    display: none;
+    align-items: center;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    background: var(--cream);
+  }
+
+  .filter-bar.visible { display: flex; }
+
+  .filter-group {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .filter-group label {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  .filter-group select, .filter-group input {
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    padding: 0.3rem 0.6rem;
+    border: 1px solid var(--border);
+    background: white;
+    color: var(--ink);
+    border-radius: 2px;
+    outline: none;
+  }
+
+  .results-count {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    color: var(--muted);
+    margin-left: auto;
+  }
+
+  .results-count span {
+    color: var(--ink);
+    font-weight: 500;
+  }
+
+  /* STATUS */
+  .status {
+    padding: 1.5rem 2.5rem;
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    color: var(--muted);
+    display: none;
+  }
+
+  .status.visible { display: block; }
+
+  .status .spinner {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border: 2px solid var(--border);
+    border-top-color: var(--ink);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    margin-right: 0.5rem;
+    vertical-align: middle;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .error-msg {
+    padding: 1rem 2.5rem;
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    color: var(--rust);
+    display: none;
+  }
+
+  .error-msg.visible { display: block; }
+
+  /* RESULTS */
+  .results-section {
+    padding: 0 2.5rem 3rem;
+  }
+
+  /* COLUMN HEADERS */
+  .results-header {
+    display: grid;
+    grid-template-columns: 180px 1fr 90px 90px 110px 120px;
+    gap: 0;
+    padding: 0.6rem 1rem;
+    border-bottom: 2px solid var(--ink);
+    margin-top: 1.5rem;
+    background: var(--cream);
+  }
+
+  .col-head {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    cursor: pointer;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    transition: color 0.15s;
+  }
+
+  .col-head:hover { color: var(--ink); }
+  .col-head.active { color: var(--gold); }
+  .col-head .sort-arrow { font-size: 0.6rem; }
+
+  /* RESULT ROWS */
+  .result-row {
+    display: grid;
+    grid-template-columns: 180px 1fr 90px 90px 110px 120px;
+    gap: 0;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.1s;
+    align-items: start;
+  }
+
+  .result-row:hover { background: var(--cream); }
+
+  .result-row.selected { background: #f0ebe0; border-left: 3px solid var(--gold); }
+
+  .cell {
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    padding-right: 1rem;
+    word-break: break-all;
+  }
+
+  .cell-date {
+    color: var(--gold);
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .cell-date:hover { color: var(--rust); text-decoration: underline; }
+
+  .cell-url {
+    color: var(--ink);
+    font-size: 0.72rem;
+    line-height: 1.4;
+  }
+
+  .cell-url a {
+    color: var(--rust);
+    text-decoration: none;
+  }
+
+  .cell-url a:hover { text-decoration: underline; }
+
+  .cell-status {}
+  .status-200 { color: #2d6a2d; }
+  .status-301, .status-302 { color: var(--gold); }
+  .status-404 { color: var(--rust); }
+  .status-other { color: var(--muted); }
+
+  .cell-mime {
+    color: var(--muted);
+    font-size: 0.68rem;
+  }
+
+  .cell-length {
+    color: var(--muted);
+    text-align: right;
+  }
+
+  .cell-actions {
+    display: flex;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+  }
+
+  .action-btn {
+    font-family: var(--mono);
+    font-size: 0.62rem;
+    padding: 0.2rem 0.5rem;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--ink);
+    cursor: pointer;
+    border-radius: 2px;
+    text-decoration: none;
+    display: inline-block;
+    transition: all 0.12s;
+    white-space: nowrap;
+  }
+
+  .action-btn:hover {
+    background: var(--ink);
+    color: var(--paper);
+    border-color: var(--ink);
+  }
+
+  .action-btn.gold:hover {
+    background: var(--gold);
+    border-color: var(--gold);
+  }
+
+  /* PREVIEW PANEL */
+  .preview-panel {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 520px;
+    height: 100vh;
+    background: var(--paper);
+    border-left: 2px solid var(--ink);
+    display: none;
+    flex-direction: column;
+    z-index: 100;
+    box-shadow: -8px 0 30px rgba(0,0,0,0.15);
+  }
+
+  .preview-panel.open { display: flex; }
+
+  .preview-header {
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    background: var(--cream);
+  }
+
+  .preview-title {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+
+  .preview-title strong {
+    display: block;
+    color: var(--ink);
+    font-size: 0.8rem;
+    margin-bottom: 0.15rem;
+  }
+
+  .preview-close {
+    font-family: var(--mono);
+    font-size: 1rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--muted);
+    padding: 0.1rem 0.3rem;
+    flex-shrink: 0;
+  }
+
+  .preview-close:hover { color: var(--rust); }
+
+  .preview-toolbar {
+    padding: 0.6rem 1.25rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+  }
+
+  .preview-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1.25rem;
+  }
+
+  .preview-body iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+    min-height: 600px;
+  }
+
+  .preview-text {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    line-height: 1.7;
+    white-space: pre-wrap;
+    word-break: break-word;
+    color: var(--ink);
+  }
+
+  .preview-loading {
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    color: var(--muted);
+    padding: 2rem;
+    text-align: center;
+  }
+
+  /* SAVED FINDS */
+  .saved-section {
+    padding: 1.5rem 2.5rem;
+    border-top: 2px solid var(--ink);
+    margin-top: 2rem;
+    display: none;
+  }
+
+  .saved-section.has-items { display: block; }
+
+  .saved-header {
+    font-family: var(--serif);
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .saved-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .saved-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.6rem 0.9rem;
+    background: var(--cream);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    font-family: var(--mono);
+    font-size: 0.72rem;
+  }
+
+  .saved-item .saved-date { color: var(--gold); font-weight: 500; width: 140px; flex-shrink: 0; }
+  .saved-item .saved-url { color: var(--ink); flex: 1; word-break: break-all; }
+  .saved-item .saved-note { color: var(--muted); flex: 1; font-size: 0.68rem; }
+
+  .saved-remove {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--muted);
+    font-size: 0.8rem;
+    padding: 0.1rem 0.3rem;
+  }
+
+  .saved-remove:hover { color: var(--rust); }
+
+  .export-btn {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    padding: 0.3rem 0.8rem;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    border-radius: 2px;
+    transition: all 0.15s;
+  }
+
+  .export-btn:hover { color: var(--ink); border-color: var(--ink); }
+
+  /* EMPTY STATE */
+  .empty-state {
+    padding: 4rem 2.5rem;
+    text-align: center;
+    display: none;
+  }
+
+  .empty-state.visible { display: block; }
+
+  .empty-title {
+    font-family: var(--serif);
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin-bottom: 0.75rem;
+    color: var(--ink);
+  }
+
+  .empty-sub {
+    font-family: var(--mono);
+    font-size: 0.78rem;
+    color: var(--muted);
+    line-height: 1.8;
+    max-width: 480px;
+    margin: 0 auto;
+  }
+
+  .target-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 0.75rem;
+    margin-top: 2.5rem;
+    text-align: left;
+    max-width: 700px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .target-card {
+    padding: 0.9rem 1rem;
+    border: 1px solid var(--border);
+    background: var(--cream);
+    cursor: pointer;
+    transition: all 0.15s;
+    border-radius: 2px;
+  }
+
+  .target-card:hover {
+    border-color: var(--ink);
+    background: white;
+  }
+
+  .target-domain {
+    font-family: var(--mono);
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: var(--rust);
+    margin-bottom: 0.2rem;
+  }
+
+  .target-desc {
+    font-family: var(--sans);
+    font-size: 0.72rem;
+    color: var(--muted);
+    line-height: 1.4;
+  }
+
+  /* RESPONSIVE */
+  @media (max-width: 900px) {
+    .results-header, .result-row {
+      grid-template-columns: 150px 1fr 70px 100px;
+    }
+    .col-head:nth-child(4), .cell:nth-child(4),
+    .col-head:nth-child(5), .cell:nth-child(5) { display: none; }
+    .preview-panel { width: 100vw; }
+    .field-url input { width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-block">
+    <h1>Wayback Explorer</h1>
+    <div class="tagline">Internet Archive Research Tool — FutureXRP / @the5blairs</div>
+  </div>
+  <div class="header-meta">
+    CDX API · No auth required<br>
+    github.com/FutureXRP/wayback-explorer
+  </div>
+</header>
+
+<div class="presets">
+  <span class="presets-label">Quick targets:</span>
+  <button class="preset-btn" onclick="loadPreset('ripple.com', '20120601', '20141231')">ripple.com 2012–14</button>
+  <button class="preset-btn" onclick="loadPreset('ripple.com', '20130101', '20131231')">ripple.com 2013</button>
+  <button class="preset-btn" onclick="loadPreset('opencoin.com', '20120101', '20141231')">opencoin.com</button>
+  <button class="preset-btn" onclick="loadPreset('ripplepay.com', '20040101', '20121231')">ripplepay.com</button>
+  <button class="preset-btn" onclick="loadPreset('rumplepay.com', '20190101', '')">rumplepay.com</button>
+  <button class="preset-btn" onclick="loadPreset('ripplelabs.com', '20130101', '20151231')">ripplelabs.com</button>
+  <button class="preset-btn" onclick="loadPreset('bitcointalk.org/index.php', '20110101', '20121231')">bitcointalk 2011</button>
+  <button class="preset-btn" onclick="loadPreset('secretbitcoinproject.com', '', '')">secretbitcoin</button>
+  <button class="preset-btn" onclick="loadPreset('xrpl.org', '20120101', '20151231')">xrpl.org early</button>
+</div>
+
+<div class="search-section">
+  <div class="search-row">
+    <div class="field-group field-url">
+      <label>URL or Domain</label>
+      <input type="text" id="urlInput" placeholder="ripple.com or ripple.com/blog/*" />
+    </div>
+    <div class="field-group field-from">
+      <label>From (YYYYMMDD)</label>
+      <input type="text" id="fromInput" placeholder="20120101" maxlength="8" />
+    </div>
+    <div class="field-group field-to">
+      <label>To (YYYYMMDD)</label>
+      <input type="text" id="toInput" placeholder="20141231" maxlength="8" />
+    </div>
+    <div class="field-group field-limit">
+      <label>Max results</label>
+      <select id="limitInput">
+        <option value="50">50</option>
+        <option value="100" selected>100</option>
+        <option value="250">250</option>
+        <option value="500">500</option>
+        <option value="1000">1000</option>
+      </select>
+    </div>
+    <div class="field-group field-match">
+      <label>Match type</label>
+      <select id="matchInput">
+        <option value="exact">Exact URL</option>
+        <option value="prefix" selected>Prefix (all subpages)</option>
+        <option value="domain">Domain (all)</option>
+        <option value="host">Host</option>
+      </select>
+    </div>
+    <button class="search-btn" id="searchBtn" onclick="doSearch()">Search Archive</button>
+    <button class="clear-btn" onclick="clearResults()">Clear</button>
+  </div>
+</div>
+
+<div class="filter-bar" id="filterBar">
+  <div class="filter-group">
+    <label>Sort by</label>
+    <select id="sortField" onchange="applyFilters()">
+      <option value="date-desc">Date ↓ newest</option>
+      <option value="date-asc">Date ↑ oldest</option>
+      <option value="status">Status code</option>
+      <option value="length-desc">Size ↓</option>
+      <option value="url">URL A–Z</option>
+    </select>
+  </div>
+  <div class="filter-group">
+    <label>Status</label>
+    <select id="filterStatus" onchange="applyFilters()">
+      <option value="">All</option>
+      <option value="200">200 OK</option>
+      <option value="301">301 Redirect</option>
+      <option value="302">302 Redirect</option>
+      <option value="404">404 Not found</option>
+    </select>
+  </div>
+  <div class="filter-group">
+    <label>Year</label>
+    <select id="filterYear" onchange="applyFilters()">
+      <option value="">All years</option>
+    </select>
+  </div>
+  <div class="filter-group">
+    <label>Filter URL</label>
+    <input type="text" id="filterUrl" placeholder="e.g. blog" oninput="applyFilters()" style="width:140px;" />
+  </div>
+  <div class="filter-group">
+    <label>Unique URLs only</label>
+    <input type="checkbox" id="filterUnique" onchange="applyFilters()" style="width:auto;" />
+  </div>
+  <div class="results-count" id="resultsCount"></div>
+</div>
+
+<div class="status" id="statusMsg">
+  <span class="spinner"></span> <span id="statusText">Querying Internet Archive CDX API...</span>
+</div>
+<div class="error-msg" id="errorMsg"></div>
+
+<div class="results-section" id="resultsSection">
+  <div class="empty-state visible" id="emptyState">
+    <div class="empty-title">The Archive Awaits</div>
+    <div class="empty-sub">Search any domain to retrieve every snapshot the Internet Archive has ever captured. Filter, sort, and open archived pages directly in the preview panel.</div>
+    <div class="target-grid">
+      <div class="target-card" onclick="loadPreset('ripple.com', '20130101', '20131231')">
+        <div class="target-domain">ripple.com (2013)</div>
+        <div class="target-desc">The founding year — five founder interviews, the pivot week, the original nav</div>
+      </div>
+      <div class="target-card" onclick="loadPreset('opencoin.com', '20120101', '20141231')">
+        <div class="target-domain">opencoin.com</div>
+        <div class="target-desc">The pre-Ripple company page — no mention of XRP, pure network pitch</div>
+      </div>
+      <div class="target-card" onclick="loadPreset('ripplepay.com', '20050101', '20121231')">
+        <div class="target-domain">ripplepay.com</div>
+        <div class="target-desc">Ryan Fugger's original 2004 system — trust lines before Bitcoin existed</div>
+      </div>
+      <div class="target-card" onclick="loadPreset('rumplepay.com', '20190101', '')">
+        <div class="target-domain">rumplepay.com</div>
+        <div class="target-desc">Fugger's current project — still building, renamed, still running</div>
+      </div>
+      <div class="target-card" onclick="loadPreset('bitcointalk.org/index.php', '20110101', '20120101')">
+        <div class="target-domain">bitcointalk 2011</div>
+        <div class="target-desc">The "Bitcoin without mining" thread era — Jed's founding post</div>
+      </div>
+      <div class="target-card" onclick="loadPreset('ripple.com/blog', '20130101', '20150101')">
+        <div class="target-domain">ripple.com/blog</div>
+        <div class="target-desc">Every blog post from the founding era — unfiltered language</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="tableContainer" style="display:none;">
+    <div class="results-header">
+      <div class="col-head" id="col-date" onclick="setSortField('date-desc')">Timestamp <span class="sort-arrow">↓</span></div>
+      <div class="col-head" id="col-url" onclick="setSortField('url')">URL <span class="sort-arrow"></span></div>
+      <div class="col-head" id="col-status" onclick="setSortField('status')">Status <span class="sort-arrow"></span></div>
+      <div class="col-head" id="col-mime">MIME Type</div>
+      <div class="col-head" id="col-length" onclick="setSortField('length-desc')">Size <span class="sort-arrow"></span></div>
+      <div class="col-head">Actions</div>
+    </div>
+    <div id="resultsList"></div>
+  </div>
+</div>
+
+<div class="saved-section" id="savedSection">
+  <div class="saved-header">
+    Research Finds
+    <button class="export-btn" onclick="exportFinds()">Export JSON</button>
+  </div>
+  <div class="saved-list" id="savedList"></div>
+</div>
+
+<!-- PREVIEW PANEL -->
+<div class="preview-panel" id="previewPanel">
+  <div class="preview-header">
+    <div class="preview-title">
+      <strong id="previewTitle">—</strong>
+      <span id="previewMeta"></span>
+    </div>
+    <button class="preview-close" onclick="closePreview()">✕</button>
+  </div>
+  <div class="preview-toolbar">
+    <a id="previewOpenLink" href="#" target="_blank" class="action-btn">Open in Wayback ↗</a>
+    <button class="action-btn gold" onclick="saveCurrentFind()">★ Save Find</button>
+    <button class="action-btn" onclick="copyWaybackUrl()">Copy URL</button>
+  </div>
+  <div class="preview-body" id="previewBody">
+    <div class="preview-loading">Select a result to preview archived content</div>
+  </div>
+</div>
+
+<script>
+let allResults = [];
+let filtered = [];
+let savedFinds = JSON.parse(localStorage.getItem('wayback_finds') || '[]');
+let currentPreviewUrl = '';
+let currentPreviewTimestamp = '';
+let currentPreviewOrigUrl = '';
+let sortField = 'date-desc';
+
+const TARGETS = [
+  { domain: 'ripple.com', from: '20130101', to: '20131231', label: 'ripple.com 2013' },
+  { domain: 'opencoin.com', from: '20120101', to: '20141231', label: 'opencoin.com' },
+  { domain: 'ripplepay.com', from: '20040101', to: '20121231', label: 'ripplepay.com' },
+  { domain: 'rumplepay.com', from: '', to: '', label: 'rumplepay.com' },
+];
+
+function loadPreset(domain, from, to) {
+  document.getElementById('urlInput').value = domain;
+  document.getElementById('fromInput').value = from;
+  document.getElementById('toInput').value = to;
+  doSearch();
+}
+
+async function doSearch() {
+  const url = document.getElementById('urlInput').value.trim();
+  if (!url) { showError('Please enter a URL or domain.'); return; }
+
+  const from = document.getElementById('fromInput').value.trim();
+  const to = document.getElementById('toInput').value.trim();
+  const limit = document.getElementById('limitInput').value;
+  const matchType = document.getElementById('matchInput').value;
+
+  clearResults(false);
+  showStatus('Querying Internet Archive CDX API for: ' + url);
+
+  let apiUrl = `https://web.archive.org/cdx/search/cdx?url=${encodeURIComponent(url)}&output=json&fl=timestamp,original,statuscode,mimetype,length&matchType=${matchType}&limit=${limit}`;
+  if (from) apiUrl += `&from=${from}`;
+  if (to) apiUrl += `&to=${to}`;
+
+  try {
+    const resp = await fetch(apiUrl);
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const data = await resp.json();
+
+    if (!data || data.length <= 1) {
+      hideStatus();
+      showError('No results found. Try adjusting the date range or match type.');
+      return;
+    }
+
+    const rows = data.slice(1);
+    allResults = rows.map(r => ({
+      timestamp: r[0],
+      original: r[1],
+      statuscode: r[2],
+      mimetype: r[3],
+      length: parseInt(r[4]) || 0,
+      date: r[0].substring(0, 8),
+      year: r[0].substring(0, 4),
+      waybackUrl: `https://web.archive.org/web/${r[0]}/${r[1]}`
+    }));
+
+    populateYearFilter();
+    applyFilters();
+    hideStatus();
+    document.getElementById('filterBar').classList.add('visible');
+    document.getElementById('tableContainer').style.display = 'block';
+    document.getElementById('emptyState').classList.remove('visible');
+
+  } catch(e) {
+    hideStatus();
+    showError('Error fetching from Wayback Machine CDX API: ' + e.message + '. This may be a CORS issue if running locally — deploy to GitHub Pages for full functionality.');
+  }
+}
+
+function populateYearFilter() {
+  const years = [...new Set(allResults.map(r => r.year))].sort();
+  const sel = document.getElementById('filterYear');
+  sel.innerHTML = '<option value="">All years</option>';
+  years.forEach(y => {
+    const o = document.createElement('option');
+    o.value = y; o.textContent = y;
+    sel.appendChild(o);
+  });
+}
+
+function applyFilters() {
+  const statusFilter = document.getElementById('filterStatus').value;
+  const yearFilter = document.getElementById('filterYear').value;
+  const urlFilter = document.getElementById('filterUrl').value.toLowerCase();
+  const uniqueOnly = document.getElementById('filterUnique').checked;
+  sortField = document.getElementById('sortField').value;
+
+  filtered = allResults.filter(r => {
+    if (statusFilter && r.statuscode !== statusFilter) return false;
+    if (yearFilter && r.year !== yearFilter) return false;
+    if (urlFilter && !r.original.toLowerCase().includes(urlFilter)) return false;
+    return true;
+  });
+
+  if (uniqueOnly) {
+    const seen = new Set();
+    filtered = filtered.filter(r => {
+      if (seen.has(r.original)) return false;
+      seen.add(r.original); return true;
+    });
+  }
+
+  filtered.sort((a, b) => {
+    if (sortField === 'date-desc') return b.timestamp.localeCompare(a.timestamp);
+    if (sortField === 'date-asc') return a.timestamp.localeCompare(b.timestamp);
+    if (sortField === 'status') return a.statuscode.localeCompare(b.statuscode);
+    if (sortField === 'length-desc') return b.length - a.length;
+    if (sortField === 'url') return a.original.localeCompare(b.original);
+    return 0;
+  });
+
+  renderResults();
+  document.getElementById('resultsCount').innerHTML = `Showing <span>${filtered.length}</span> of <span>${allResults.length}</span> captures`;
+}
+
+function setSortField(field) {
+  document.getElementById('sortField').value = field;
+  applyFilters();
+}
+
+function renderResults() {
+  const list = document.getElementById('resultsList');
+  list.innerHTML = '';
+
+  filtered.forEach((r, i) => {
+    const row = document.createElement('div');
+    row.className = 'result-row';
+    row.dataset.index = i;
+
+    const fmtDate = formatTimestamp(r.timestamp);
+    const statusClass = r.statuscode === '200' ? 'status-200' :
+                        r.statuscode === '301' ? 'status-301' :
+                        r.statuscode === '302' ? 'status-302' :
+                        r.statuscode === '404' ? 'status-404' : 'status-other';
+
+    const shortMime = (r.mimetype || '').replace('text/', '').replace('application/', '').split(';')[0].trim().substring(0, 15);
+    const sizeStr = r.length > 0 ? formatSize(r.length) : '—';
+
+    row.innerHTML = `
+      <div class="cell cell-date" onclick="openPreview('${r.waybackUrl}', '${r.timestamp}', '${escHtml(r.original)}')">${fmtDate}</div>
+      <div class="cell cell-url"><a href="${r.waybackUrl}" target="_blank">${escHtml(r.original)}</a></div>
+      <div class="cell cell-status ${statusClass}">${r.statuscode}</div>
+      <div class="cell cell-mime">${shortMime}</div>
+      <div class="cell cell-length">${sizeStr}</div>
+      <div class="cell cell-actions">
+        <button class="action-btn" onclick="openPreview('${r.waybackUrl}', '${r.timestamp}', '${escHtml(r.original)}')">Preview</button>
+        <a class="action-btn" href="${r.waybackUrl}" target="_blank">Open ↗</a>
+        <button class="action-btn gold" onclick="quickSave(${i})">★</button>
+      </div>
+    `;
+    list.appendChild(row);
+  });
+
+  if (filtered.length === 0) {
+    list.innerHTML = '<div style="padding:1.5rem 1rem; font-family:var(--mono); font-size:0.78rem; color:var(--muted);">No results match current filters.</div>';
+  }
+}
+
+function formatTimestamp(ts) {
+  if (!ts || ts.length < 14) return ts;
+  const y = ts.substring(0,4);
+  const mo = ts.substring(4,6);
+  const d = ts.substring(6,8);
+  const h = ts.substring(8,10);
+  const mi = ts.substring(10,12);
+  return `${y}-${mo}-${d} ${h}:${mi}`;
+}
+
+function formatSize(bytes) {
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1048576) return (bytes/1024).toFixed(1) + ' KB';
+  return (bytes/1048576).toFixed(1) + ' MB';
+}
+
+function escHtml(str) {
+  return (str || '').replace(/'/g, "\\'").replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function openPreview(waybackUrl, timestamp, origUrl) {
+  currentPreviewUrl = waybackUrl;
+  currentPreviewTimestamp = timestamp;
+  currentPreviewOrigUrl = origUrl;
+
+  document.getElementById('previewTitle').textContent = origUrl;
+  document.getElementById('previewMeta').textContent = formatTimestamp(timestamp);
+  document.getElementById('previewOpenLink').href = waybackUrl;
+
+  const body = document.getElementById('previewBody');
+  body.innerHTML = '<div class="preview-loading"><span class="spinner" style="display:inline-block;width:12px;height:12px;border:2px solid #ccc;border-top-color:#333;border-radius:50%;animation:spin 0.7s linear infinite;margin-right:6px;vertical-align:middle;"></span>Loading archived page...</div>';
+
+  document.getElementById('previewPanel').classList.add('open');
+
+  body.innerHTML = `<iframe src="${waybackUrl}" sandbox="allow-scripts allow-same-origin allow-forms" loading="lazy"></iframe>`;
+
+  document.querySelectorAll('.result-row').forEach(r => r.classList.remove('selected'));
+  const rows = document.querySelectorAll('.result-row');
+  rows.forEach(r => {
+    if (filtered[r.dataset.index] && filtered[r.dataset.index].waybackUrl === waybackUrl) {
+      r.classList.add('selected');
+    }
+  });
+}
+
+function closePreview() {
+  document.getElementById('previewPanel').classList.remove('open');
+  document.getElementById('previewBody').innerHTML = '<div class="preview-loading">Select a result to preview archived content</div>';
+  document.querySelectorAll('.result-row').forEach(r => r.classList.remove('selected'));
+}
+
+function quickSave(index) {
+  const r = filtered[index];
+  if (!r) return;
+  saveFind(r.waybackUrl, r.timestamp, r.original, '');
+}
+
+function saveCurrentFind() {
+  if (!currentPreviewUrl) return;
+  const note = prompt('Add a note for this find (optional):') || '';
+  saveFind(currentPreviewUrl, currentPreviewTimestamp, currentPreviewOrigUrl, note);
+}
+
+function saveFind(url, timestamp, origUrl, note) {
+  const existing = savedFinds.find(f => f.url === url);
+  if (existing) { alert('Already saved.'); return; }
+  savedFinds.push({ url, timestamp, origUrl, note, savedAt: new Date().toISOString() });
+  localStorage.setItem('wayback_finds', JSON.stringify(savedFinds));
+  renderSaved();
+}
+
+function renderSaved() {
+  if (savedFinds.length === 0) {
+    document.getElementById('savedSection').classList.remove('has-items');
+    return;
+  }
+  document.getElementById('savedSection').classList.add('has-items');
+  const list = document.getElementById('savedList');
+  list.innerHTML = '';
+  savedFinds.forEach((f, i) => {
+    const item = document.createElement('div');
+    item.className = 'saved-item';
+    item.innerHTML = `
+      <span class="saved-date">${formatTimestamp(f.timestamp)}</span>
+      <a class="saved-url" href="${f.url}" target="_blank">${f.origUrl}</a>
+      <span class="saved-note">${f.note || '—'}</span>
+      <button class="saved-remove" onclick="removeSaved(${i})">✕</button>
+    `;
+    list.appendChild(item);
+  });
+}
+
+function removeSaved(i) {
+  savedFinds.splice(i, 1);
+  localStorage.setItem('wayback_finds', JSON.stringify(savedFinds));
+  renderSaved();
+}
+
+function exportFinds() {
+  const blob = new Blob([JSON.stringify(savedFinds, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'wayback_research_finds.json';
+  a.click();
+}
+
+function copyWaybackUrl() {
+  navigator.clipboard.writeText(currentPreviewUrl).then(() => {
+    const btn = event.target;
+    btn.textContent = 'Copied!';
+    setTimeout(() => btn.textContent = 'Copy URL', 1500);
+  });
+}
+
+function showStatus(msg) {
+  document.getElementById('statusText').textContent = msg;
+  document.getElementById('statusMsg').classList.add('visible');
+  document.getElementById('searchBtn').disabled = true;
+}
+
+function hideStatus() {
+  document.getElementById('statusMsg').classList.remove('visible');
+  document.getElementById('searchBtn').disabled = false;
+}
+
+function showError(msg) {
+  const el = document.getElementById('errorMsg');
+  el.textContent = msg;
+  el.classList.add('visible');
+}
+
+function clearResults(resetInputs = true) {
+  allResults = [];
+  filtered = [];
+  document.getElementById('resultsList').innerHTML = '';
+  document.getElementById('tableContainer').style.display = 'none';
+  document.getElementById('emptyState').classList.add('visible');
+  document.getElementById('filterBar').classList.remove('visible');
+  document.getElementById('errorMsg').classList.remove('visible');
+  document.getElementById('statusMsg').classList.remove('visible');
+  if (resetInputs) {
+    document.getElementById('urlInput').value = '';
+    document.getElementById('fromInput').value = '';
+    document.getElementById('toInput').value = '';
+  }
+  closePreview();
+}
+
+document.getElementById('urlInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') doSearch();
+});
+
+renderSaved();
+</script>
+</body>
+</html>
