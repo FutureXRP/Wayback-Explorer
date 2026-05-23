@@ -850,7 +850,16 @@ async function doSearch() {
   clearResults(false);
   showStatus('Querying Internet Archive CDX API for: ' + url);
 
-  let apiUrl = `https://web.archive.org/cdx/search/cdx?url=${encodeURIComponent(url)}&output=json&fl=timestamp,original,statuscode,mimetype,length&matchType=${matchType}&limit=${limit}`;
+  // Route through Vercel serverless proxy so Claude can also fetch results
+  // Falls back to direct CDX if proxy unavailable (e.g. local dev)
+  const isVercel = window.location.hostname.includes('vercel.app') || window.location.hostname.includes('futurexrp.github.io');
+  const proxyBase = isVercel ? '/api/cdx' : 'https://web.archive.org/cdx/search/cdx';
+  const useProxy = window.location.hostname.includes('vercel.app');
+
+  let apiUrl = useProxy
+    ? `/api/cdx?url=${encodeURIComponent(url)}&matchType=${matchType}&limit=${limit}`
+    : `https://web.archive.org/cdx/search/cdx?url=${encodeURIComponent(url)}&output=json&fl=timestamp,original,statuscode,mimetype,length&matchType=${matchType}&limit=${limit}`;
+
   if (from) apiUrl += `&from=${from}`;
   if (to) apiUrl += `&to=${to}`;
 
